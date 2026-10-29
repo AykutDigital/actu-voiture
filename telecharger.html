@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Télécharger Bon Plan Auto</title>
+  <meta name="description" content="Installe Bon Plan Auto sur ton téléphone.">
+  <meta name="theme-color" content="#0f766e">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    body { padding-bottom: 24px; }
+    .hero { text-align: center; padding: 32px 0 8px; }
+    .hero img { width: 96px; height: 96px; border-radius: 22px; box-shadow: 0 6px 20px rgba(0,0,0,.15); }
+    .hero h1 { font-size: 1.6rem; margin: 16px 0 4px; }
+    .hero p { margin: 0 auto 20px; max-width: 30rem; }
+    #installBtn { font-size: 1.05rem; padding: 14px 28px; }
+    #qr { display: inline-block; padding: 12px; background: #fff; border-radius: 12px; margin: 8px 0; }
+    .feat { display: grid; gap: 10px; }
+    .feat div { display: grid; grid-template-columns: 32px 1fr; gap: 8px; font-size: .92rem; }
+  </style>
+</head>
+<body>
+  <main>
+    <section class="hero">
+      <img src="icons/icon-512.png" alt="">
+      <h1>Bon Plan Auto</h1>
+      <p class="muted">Repère en un geste les voitures d'occasion vendues bien en dessous de leur cote. Budget 20 000 €, tous types de voitures.</p>
+      <button class="btn" id="installBtn" type="button" hidden>📲 Installer l'application</button>
+      <p class="small" id="installHint"></p>
+      <p><a class="btn ghost small" href="./">Ouvrir l'appli dans le navigateur</a></p>
+    </section>
+
+    <div class="card center" id="qrCard">
+      <h2>Sur ton téléphone</h2>
+      <p class="small muted">Scanne ce code avec l'appareil photo de ton téléphone pour ouvrir cette page et installer l'appli.</p>
+      <div id="qr"></div>
+    </div>
+
+    <div class="card">
+      <h2>Ce que fait l'appli</h2>
+      <div class="feat">
+        <div><span>🔍</span><span>Analyse une annonce (lien, texte ou bouton « Analyser ») : cote estimée, écart de prix, verdict.</span></div>
+        <div><span>💡</span><span>Explique pourquoi c'est moins cher, les pannes connues du moteur et le budget réparations.</span></div>
+        <div><span>🛡️</span><span>Détecte les arnaques et donne le prix à proposer, plus un plan d'achat sécurisé.</span></div>
+        <div><span>📡</span><span>Radar des modèles les plus fiables pour ton budget, avec recherches prêtes sur Leboncoin, La Centrale et AutoScout24.</span></div>
+        <div><span>🔔</span><span>Rappel chaque jour pour aller voir les nouvelles annonces.</span></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Version APK (Android, mode développeur)</h2>
+      <ol class="small">
+        <li>Va sur <a href="https://www.pwabuilder.com" target="_blank" rel="noopener">pwabuilder.com</a>, colle l'adresse de cette appli, puis <b>Package for stores → Android</b>.</li>
+        <li>Sur le téléphone : Paramètres → À propos → touche 7 fois <b>Numéro de build</b>, puis autorise l'<b>installation d'applis inconnues</b>.</li>
+        <li>Ouvre le fichier APK téléchargé pour l'installer.</li>
+      </ol>
+    </div>
+  </main>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <script type="module">
+    import { setupInstall, isInstalled } from "./install.js";
+    setupInstall(document.getElementById("installBtn"), document.getElementById("installHint"));
+    const here = location.href.split("#")[0].split("?")[0];
+    // Le QR code ne sert que sur ordinateur, pour passer la page au téléphone.
+    if (isInstalled() || matchMedia("(pointer: coarse)").matches) {
+      document.getElementById("qrCard").hidden = true;
+    } else if (window.QRCode) {
+      new QRCode(document.getElementById("qr"), { text: here, width: 180, height: 180 });
+    }
+    if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});
+  </script>
+</body>
+</html>

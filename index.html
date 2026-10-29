@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Bon Plan Auto</title>
+  <meta name="description" content="Repère les voitures d'occasion bien en dessous de leur cote, avec un budget de 20 000 €.">
+  <meta name="theme-color" content="#0f766e">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="top">
+    <h1>Bon Plan Auto</h1>
+    <span class="budget-pill" id="budgetPill">Budget 20 000 €</span>
+  </header>
+
+  <main>
+    <!-- ANALYSER -->
+    <section id="tab-analyse" class="tab active">
+      <div class="card">
+        <h2>Analyser une annonce</h2>
+        <p class="muted">Le plus rapide : le bouton <b>Analyser</b> depuis la page de l'annonce (voir plus bas). Sinon, copie le texte de l'annonce et colle-le ici : l'analyse se lance toute seule.</p>
+        <textarea id="raw" rows="6" placeholder="Ex : Peugeot 208 1.2 PureTech 110 Allure, 2020, 62 000 km, essence, manuelle, 11 900 €. Vente urgente cause déménagement…"></textarea>
+        <button class="btn ghost small" id="pasteBtn" type="button">Coller depuis le presse-papiers</button>
+
+        <div class="grid">
+          <label>Modèle<select id="f-model"></select></label>
+          <label>Prix (€)<input id="f-price" type="number" inputmode="numeric" min="0"></label>
+          <label>Année<input id="f-year" type="number" inputmode="numeric" min="1990"></label>
+          <label>Kilométrage<input id="f-km" type="number" inputmode="numeric" min="0"></label>
+          <label>Carburant<select id="f-fuel"><option></option><option>Essence</option><option>Diesel</option><option>Hybride</option><option>Électrique</option><option>GPL</option></select></label>
+          <label>Moteur / boîte<input id="f-engine" placeholder="ex : 1.2 PureTech, EDC"></label>
+        </div>
+        <button class="btn" id="analyseBtn" type="button">Analyser</button>
+      </div>
+      <div id="result"></div>
+      <details class="card" id="bmCard">
+        <summary><b>Installer le bouton « Analyser » (une seule fois)</b></summary>
+        <p class="small">Ensuite, sur n'importe quelle annonce (Leboncoin, La Centrale, AutoScout24…), tu touches ce bouton et l'analyse s'ouvre directement.</p>
+        <p class="small"><b>Sur ordinateur :</b> fais glisser ce bouton dans ta barre de favoris :<br><a class="btn small" id="bmLink" href="#">🚗 Analyser</a></p>
+        <p class="small"><b>Sur Android (Chrome) :</b></p>
+        <ol class="small">
+          <li>Touche « Copier le code » ci-dessous.</li>
+          <li>Ajoute n'importe quelle page aux favoris (☆), puis modifie ce favori : nom <b>Analyser</b>, et colle le code à la place de l'URL.</li>
+          <li>Sur une annonce, tape « Analyser » dans la barre d'adresse et touche le favori qui apparaît.</li>
+        </ol>
+        <button class="btn ghost small" id="bmCopy" type="button">Copier le code</button>
+        <p class="muted small">Dans l'appli Leboncoin, utilise d'abord « Partager → Chrome » pour ouvrir l'annonce dans le navigateur.</p>
+      </details>
+    </section>
+
+    <!-- RADAR -->
+    <section id="tab-radar" class="tab">
+      <div class="card">
+        <h2>Radar bonnes affaires</h2>
+        <p class="muted">Les modèles les plus fiables que tu peux viser avec ton budget, et des recherches déjà filtrées sur les sites d'annonces.</p>
+        <div class="grid">
+          <label>Type<select id="r-seg"></select></label>
+          <label>Km maximum<input id="r-km" type="number" inputmode="numeric" value="150000" step="10000"></label>
+        </div>
+        <div class="links" id="r-links"></div>
+      </div>
+      <div id="picks"></div>
+    </section>
+
+    <!-- FAVORIS -->
+    <section id="tab-saved" class="tab">
+      <div class="card"><h2>Mes affaires</h2><p class="muted">Les annonces analysées que tu as gardées (stockées sur ce téléphone).</p></div>
+      <div id="savedList"></div>
+    </section>
+
+    <!-- RÉGLAGES -->
+    <section id="tab-settings" class="tab">
+      <div class="card">
+        <h2>Réglages</h2>
+        <label>Budget maximum (€)<input id="s-budget" type="number" inputmode="numeric" step="500"></label>
+        <label>Clé API Claude (facultatif)<input id="s-key" type="password" autocomplete="off" placeholder="sk-ant-…"></label>
+        <p class="muted small">Avec une clé, le bouton « Avis détaillé IA » ajoute un avis rédigé par Claude (quelques centimes par annonce). La clé reste sur ce téléphone et n'est envoyée qu'à api.anthropic.com. Sans clé, l'analyse locale fonctionne quand même.</p>
+        <button class="btn" id="saveSettings" type="button">Enregistrer</button>
+        <p class="muted small" id="settingsMsg"></p>
+      </div>
+      <div class="card">
+        <h3>📲 Application</h3>
+        <button class="btn" id="installBtn" type="button" hidden>Installer l'application</button>
+        <p class="small" id="installHint"></p>
+        <a class="btn ghost small" href="telecharger.html">Page de téléchargement (à partager)</a>
+      </div>
+      <div class="card">
+        <h3>🔔 Rappel quotidien</h3>
+        <p class="small muted">Une notification par jour (entre 8 h et 21 h) pour aller voir les nouvelles annonces. Fonctionne quand l'appli est installée sur Android (Chrome).</p>
+        <div class="actions">
+          <button class="btn" id="remindOn" type="button">Activer le rappel</button>
+          <button class="btn ghost" id="remindTest" type="button">Tester</button>
+        </div>
+        <p class="small" id="remindMsg"></p>
+      </div>
+      <div class="card">
+        <h3>Comment c'est calculé</h3>
+        <p class="muted small">La cote est estimée à partir du prix neuf moyen du modèle, de l'âge (environ −15 % la 1re année puis −8 % par an), du kilométrage (15 000 km/an attendus) et de la réputation du modèle à la revente. C'est une estimation à ±15 % : vérifie toujours avec la cote La Centrale ou L'argus avant de faire une offre.</p>
+      </div>
+    </section>
+  </main>
+
+  <nav class="tabs">
+    <button data-tab="analyse" class="active"><span>🔍</span>Analyser</button>
+    <button data-tab="radar"><span>📡</span>Radar</button>
+    <button data-tab="saved"><span>⭐</span>Mes affaires</button>
+    <button data-tab="settings"><span>⚙️</span>Réglages</button>
+  </nav>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>
