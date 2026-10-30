@@ -1,5 +1,5 @@
 // Met l'appli en cache pour qu'elle s'ouvre même sans réseau.
-const CACHE = "bonplanauto-v6";
+const CACHE = "bonplanauto-v7";
 const FILES = ["./", "index.html", "telecharger.html", "styles.css", "app.js", "analyzer.js", "data.js", "radar.js", "bookmarklet.js", "install.js", "manifest.webmanifest", "icons/icon.svg", "icons/icon-192.png", "icons/icon-512.png"];
 
 self.addEventListener("install", (e) => {
@@ -44,8 +44,15 @@ async function remind({ force = false } = {}) {
   const now = new Date();
   const day = now.toISOString().slice(0, 10);
   if (!force && (now.getHours() < 8 || now.getHours() >= 21 || (await lastShown()) === day)) return;
+  // Si le relevé du matin a trouvé des affaires, on le dit ; sinon simple rappel.
+  let body = TIPS[now.getDate() % TIPS.length];
+  try {
+    const d = await (await fetch("deals.json", { cache: "no-cache" })).json();
+    if (d.status === "ok" && d.updated?.startsWith(day) && d.deals.length)
+      body = `${d.deals.length} bonne${d.deals.length > 1 ? "s" : ""} affaire${d.deals.length > 1 ? "s" : ""} repérée${d.deals.length > 1 ? "s" : ""} ce matin, dont ${d.deals[0].title} à ${d.deals[0].price.toLocaleString("fr-FR")} € (${d.deals[0].gap} %).`;
+  } catch {}
   await self.registration.showNotification("Bon Plan Auto 🚗", {
-    body: TIPS[now.getDate() % TIPS.length],
+    body,
     icon: "icons/icon-192.png",
     badge: "icons/icon-192.png",
     tag: "rappel-annonces",

@@ -3,10 +3,12 @@ name: Publier sur GitHub Pages
 on:
   push:
     branches: [main]
+  schedule:
+    - cron: "0 5 * * *" # relevé Leboncoin chaque matin (6 h ou 7 h à Paris)
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
   pages: write
   id-token: write
 
@@ -22,6 +24,23 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        if: github.event_name != 'push'
+        with:
+          node-version: 20
+      # Le robot s'annonce avec son User-Agent (secret LBC_USER_AGENT, à donner à Leboncoin pour la liste blanche).
+      - name: Relevé des annonces
+        if: github.event_name != 'push'
+        env:
+          LBC_USER_AGENT: ${{ secrets.LBC_USER_AGENT }}
+          BUDGET: ${{ vars.BUDGET }}
+          KM_MAX: ${{ vars.KM_MAX }}
+        run: |
+          node scripts/crawl.mjs
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add deals.json
+          git diff --cached --quiet || (git commit -m "Relevé des annonces du jour" && git push)
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:

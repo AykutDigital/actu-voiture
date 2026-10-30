@@ -19,7 +19,11 @@ Application web installable sur téléphone (PWA) pour repérer les voitures d'o
 - **Mes affaires** : les annonces gardées, enregistrées sur le téléphone.
 - **Avis détaillé IA** (facultatif) : avec une clé API Claude saisie dans Réglages, Claude rédige un avis complet. La clé reste sur le téléphone.
 
-> L'appli ne parcourt pas les sites d'annonces toute seule. Leboncoin et La Centrale bloquent les robots, et AutoScout24 et ParuVendu interdisent l'aspiration de leurs pages de recherche. C'est donc toi qui ouvres les annonces (le Radar t'y amène) et l'appli qui les analyse.
+- **Affaires du jour** (Radar) : chaque matin vers 6 h, GitHub Actions relève les dernières annonces voitures Leboncoin sous le budget (`scripts/crawl.mjs`), les analyse et publie les bonnes affaires dans `deals.json`. Le rappel quotidien annonce le nombre trouvé. Le robot ne contourne aucune protection. Il s'annonce avec son User-Agent et ne passe que si Leboncoin l'a mis en liste blanche dans DataDome. Sinon, l'appli affiche « bloqué ».
+  - Réglage : Settings → Secrets and variables → Actions. Le secret `LBC_USER_AGENT` contient le User-Agent communiqué à Leboncoin pour la liste blanche (par défaut `BonPlanAuto/1.0 (+https://github.com/AykutDigital/actu-voiture)`). Les variables `BUDGET` et `KM_MAX` sont facultatives.
+  - Lancer à la main : Actions → *Publier sur GitHub Pages* → *Run workflow*.
+
+> Sans liste blanche, l'appli ne parcourt pas les sites d'annonces toute seule. Leboncoin et La Centrale bloquent les robots, et AutoScout24 et ParuVendu interdisent l'aspiration de leurs pages de recherche. C'est donc toi qui ouvres les annonces (le Radar t'y amène) et l'appli qui les analyse.
 
 La cote est une **estimation à ±15 %** (prix neuf moyen, âge, kilométrage, réputation du modèle). Vérifie toujours avec la cote La Centrale ou L'argus avant de faire une offre.
 

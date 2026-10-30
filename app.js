@@ -19,7 +19,7 @@ function showTab(name) {
   document.querySelectorAll(".tab").forEach((t) => t.classList.toggle("active", t.id === `tab-${name}`));
   document.querySelectorAll(".tabs button").forEach((b) => b.classList.toggle("active", b.dataset.tab === name));
   if (name === "saved") renderSaved();
-  if (name === "radar") renderRadar();
+  if (name === "radar") { renderRadar(); renderDaily(); }
   window.scrollTo(0, 0);
 }
 document.querySelectorAll(".tabs button").forEach((b) => b.addEventListener("click", () => showTab(b.dataset.tab)));
@@ -246,6 +246,32 @@ function renderRadar() {
       <p class="small">Vise une <b>${p.year}</b> avec environ ${fmtKm(p.km)} : cote ≈ ${fmtEur(p.price)}. Une annonce sous <b>${fmtEur(Math.round((p.price * 0.88) / 100) * 100)}</b> est une bonne affaire.</p>
       <div class="links">${searchLinks({ budget, kmMax, make: p.m.make, model: p.m.model }).map(([n, u]) => `<a class="chip" href="${esc(u)}" target="_blank" rel="noopener">${n}</a>`).join("")}</div>
     </article>`).join("");
+}
+
+// ---------- Affaires du jour (relevé automatique fait chaque matin par GitHub Actions) ----------
+async function renderDaily() {
+  const box = $("#daily");
+  let d;
+  try { d = await (await fetch("deals.json", { cache: "no-cache" })).json(); } catch { box.innerHTML = ""; return; }
+  const when = d.updated ? new Date(d.updated).toLocaleString("fr-FR", { dateStyle: "short", timeStyle: "short" }) : "";
+  const head = `<div class="card"><h2>Affaires du jour</h2><p class="small muted">${esc(d.message)}${when ? ` · relevé du ${when}` : ""}</p></div>`;
+  box.innerHTML = head + (d.deals || []).slice(0, 20).map((x, i) => `
+    <article class="card pick">
+      <div class="pick-head">
+        <div><span class="dot ${x.tone}"></span> <b>${esc(x.title)}</b></div>
+        <b>${fmtEur(x.price)}</b>
+      </div>
+      <p class="small">${esc(x.verdict)} : ${Math.abs(x.gap)} % sous la cote (≈ ${fmtEur(x.cote)}). ${[x.year, x.km != null && fmtKm(x.km), x.city].filter(Boolean).map(esc).join(" · ")}${x.scam !== "faible" ? ` · <b>risque d'arnaque ${esc(x.scam)}</b>` : ""}</p>
+      ${x.reasons?.[0] ? `<p class="small muted">${esc(x.reasons[0])}</p>` : ""}
+      <div class="links"><button class="chip" data-deal="${i}" type="button">Fiche complète</button><a class="chip" href="${esc(x.url)}" target="_blank" rel="noopener">Voir l'annonce</a></div>
+    </article>`).join("");
+  box.querySelectorAll("[data-deal]").forEach((b) => b.addEventListener("click", () => {
+    $("#raw").value = d.deals[+b.dataset.deal].text;
+    showTab("analyse");
+    onRawChange();
+    clearTimeout(autoTimer);
+    runAnalysis();
+  }));
 }
 
 // ---------- Favoris ----------
