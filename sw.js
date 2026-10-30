@@ -1,5 +1,5 @@
 // Met l'appli en cache pour qu'elle s'ouvre même sans réseau.
-const CACHE = "bonplanauto-v5";
+const CACHE = "bonplanauto-v6";
 const FILES = ["./", "index.html", "telecharger.html", "styles.css", "app.js", "analyzer.js", "data.js", "radar.js", "bookmarklet.js", "install.js", "manifest.webmanifest", "icons/icon.svg", "icons/icon-192.png", "icons/icon-512.png"];
 
 self.addEventListener("install", (e) => {

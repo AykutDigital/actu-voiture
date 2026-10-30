@@ -62,9 +62,9 @@ const isBareLink = (raw) => /https?:\/\//.test(raw) && raw.trim().length < 300 &
 function linkOnlyNotice(url) {
   const hasKey = !!settings().key;
   return `<article class="card"><h3>Lien détecté</h3>
-    <p class="small">Les sites d'annonces bloquent la lecture automatique de leurs pages. ${hasKey
-      ? "Je cherche donc l'annonce via un moteur de recherche…"
-      : "Avec une clé API Claude (Réglages), je peux retrouver l'annonce via un moteur de recherche."}</p>
+    <p class="small">${hasKey
+      ? "Claude va lire l'annonce pour toi…"
+      : "Avec une clé API Claude (Réglages), Claude peut lire l'annonce à partir du lien."}</p>
     <div class="actions">
       ${hasKey ? "" : `<button class="btn small" data-lookup type="button">Chercher l'annonce</button>`}
       ${url ? `<a class="btn ghost small" href="${esc(url)}" target="_blank" rel="noopener">Ouvrir l'annonce</a>` : ""}
@@ -75,7 +75,7 @@ const LABELS = { annee: "année", km: "kilométrage", prix: "prix", modele: "mod
 async function lookupLink(url) {
   const { key } = settings();
   if (!key) { showTab("settings"); $("#settingsMsg").textContent = "Ajoute une clé API pour chercher une annonce à partir de son lien."; return; }
-  $("#result").innerHTML = `<article class="card"><p class="small">🔎 Recherche de l'annonce via un moteur de recherche… (10 à 30 s)</p></article>`;
+  $("#result").innerHTML = `<article class="card"><p class="small">🔎 Lecture de l'annonce… (10 à 30 s)</p></article>`;
   try {
     const { aiLookupLink } = await import("./ai.js");
     const ad = await aiLookupLink(key, url);
@@ -98,7 +98,7 @@ async function lookupLink(url) {
     fillForm(parseListing($("#raw").value));
     runAnalysis();
     const missing = ["modele", "annee", "km"].filter((k) => ad[k] == null).map((k) => LABELS[k]);
-    $("#result").insertAdjacentHTML("afterbegin", `<p class="note small">Infos trouvées via un moteur de recherche${missing.length
+    $("#result").insertAdjacentHTML("afterbegin", `<p class="note small">Infos lues par l'IA à partir du lien${missing.length
       ? ` · <b>non trouvé : ${missing.join(", ")}</b>. Complète ces champs au-dessus puis touche « Analyser ».`
       : "."}</p>`);
   } catch (err) {

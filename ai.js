@@ -30,20 +30,27 @@ Réponds en français simple et concis : phrases courtes, compréhensibles par q
 - prix_cible : le prix à proposer au vendeur, en €.
 Si l'annonce ne contient pas assez d'informations, dis-le plutôt que d'inventer.`;
 
-const LOOKUP_SYSTEM = `Tu retrouves les informations d'une annonce de voiture d'occasion à partir de son lien, uniquement grâce à l'outil de recherche web (ce que les moteurs de recherche ont indexé : titre, prix, extrait).
+const LOOKUP_SYSTEM = `Tu retrouves les informations d'une annonce de voiture d'occasion à partir de son lien.
+Si l'outil web_fetch est disponible, lis d'abord directement la page du lien. Si la lecture échoue ou si l'outil n'est pas disponible, utilise la recherche web (ce que les moteurs de recherche ont indexé : titre, prix, extrait).
 Règles :
 - Ne devine jamais : un champ que tu n'as pas trouvé dans les résultats vaut null.
 - Ne confonds pas avec une autre annonce : ne garde que les résultats qui correspondent à ce lien (même identifiant d'annonce ou même titre sur la même page).
 - Termine ta réponse par un unique bloc \`\`\`json contenant exactement :
 {"trouve": bool, "titre": string|null, "marque": string|null, "modele": string|null, "prix": int|null, "annee": int|null, "km": int|null, "carburant": string|null, "boite": string|null, "vendeur": "Particulier"|"Professionnel"|null, "ville": string|null, "extrait": string|null}`;
 
-// Retrouve une annonce à partir de son lien via la recherche web (index des moteurs de
-// recherche), sans ouvrir la page elle-même, que les sites d'annonces interdisent aux robots.
+// Retrouve une annonce à partir de son lien. Le robots.txt de Leboncoin autorise les robots
+// d'IA agissant pour un utilisateur (Claude-User) sur /ad/voitures/ uniquement : dans ce cas
+// Claude lit la page directement ; sinon il se contente de la recherche web.
 export async function aiLookupLink(apiKey, url) {
   const client = new Anthropic({ apiKey, dangerouslyAllowBrowser: true });
-  let host = "";
-  try { host = new URL(url).hostname.replace(/^www\./, ""); } catch {}
-  const tools = [{ type: "web_search_20260209", name: "web_search", max_uses: 4, ...(host && { allowed_domains: [host] }) }];
+  let host = "", path = "";
+  try { ({ hostname: host, pathname: path } = new URL(url)); host = host.replace(/^www\./, ""); } catch {}
+  const canFetch = host === "leboncoin.fr" && path.startsWith("/ad/voitures/");
+  const domains = host ? { allowed_domains: [host] } : {};
+  const tools = [
+    ...(canFetch ? [{ type: "web_fetch_20260209", name: "web_fetch", max_uses: 2, max_content_tokens: 20000, ...domains }] : []),
+    { type: "web_search_20260209", name: "web_search", max_uses: 4, ...domains },
+  ];
   const messages = [{ role: "user", content: `Lien de l'annonce : ${url}` }];
 
   let msg;
