@@ -1,1 +1,9 @@
-{"updated": null, "status": "jamais", "message": "Le relevé automatique n'a pas encore tourné.", "seen": 0, "deals": []}
+{
+ "updated": "2026-10-31T10:38:53.955Z",
+ "budget": 20000,
+ "kmMax": 150000,
+ "status": "bloque",
+ "message": "Leboncoin a bloqué le robot (HTTP 403). Il n'est pas encore en liste blanche.",
+ "seen": 0,
+ "deals": []
+}
